@@ -1,0 +1,88 @@
+{
+  "version": 2,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "debug",
+      "displayName": "Debug",
+      "description": "Debug build для занять блоку 2: символи для GDB і зрозуміла структура build/debug.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "debug-asan",
+      "displayName": "Debug + ASan/UBSan",
+      "description": "Debug-asan build для діагностики витоків пам'яті",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/debug-asan",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_FLAGS": "-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release",
+      "description": "Release buid: максимальна оптимізація коду за швидкістю (-O3), видалення налагоджувальної інформації для зменшення розміру бінарника.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "relwithdebinfo",
+      "displayName": "RelWithDebInfo",
+      "description": "RelWithDebInfo: Оптимізована збірка (-O2), яка зберігає налагоджувальну інформацію. Ідеально для пошуку багів, які проявляються лише на високій швидкості.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/relwithdebinfo",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "aarch64-debug",
+      "displayName": "ARM64 Debug",
+      "description": "Cross-compile debug build для Raspberry Pi / Radxa / Jetson через aarch64-linux-gnu toolchain.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/aarch64-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchains/aarch64-linux-gnu.cmake"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug",
+      "displayName": "Build Debug",
+      "description": "Зібрати debug preset після configure.",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "release",
+      "displayName": "Build Release",
+      "description": "Зібрати release preset після configure.",
+      "configurePreset": "release"
+    },
+    {
+      "name": "relwithdebinfo",
+      "displayName": "Build Relwithdebinfo",
+      "description": "Зібрати relwithdebinfo preset після configure.",
+      "configurePreset": "relwithdebinfo"
+    },
+    {
+      "name": "aarch64-debug",
+      "displayName": "Build ARM64 Debug",
+      "description": "Зібрати ARM64 debug preset після cross-configure.",
+      "configurePreset": "aarch64-debug"
+    }
+  ]
+}
