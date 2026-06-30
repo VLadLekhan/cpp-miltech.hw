@@ -16,18 +16,21 @@ class DronePhysics {
 
     std::thread workerThread;
     std::atomic<bool> isRunning;
-
+    std::atomic<bool> threadReady_{false};
     mutable std::mutex mtx;
     ThreadSafeQueue<DroneCommand> commandQueue;
 
-    void run();             
+                
     void integrate(float dt); 
     void processCommands();
+    void applyCommand(const DroneCommand& cmd);
 
     public:
     DronePhysics(const DroneConfig& config);
     ~DronePhysics();
-
+    
+    bool isThreadReady() const;
+    void run(); 
     void start();
     void stop();
 

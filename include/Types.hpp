@@ -59,6 +59,8 @@ struct DroneConfig {
     float angularspeed;     
     float turnThreshold;
     DropPoint droppoint;
+    float physicsTimeStep;
+    float timeScale;
 };
 
 struct SimStep {
@@ -86,7 +88,9 @@ struct DroneTelemetry {
 };
 
 struct DroneCommand {
-	DroneMode state;   // новий режим
+	DroneMode state; 
+    float targetVx; // Додайте це, щоб StateMoving міг сказати, з якою швидкістю летіти
+    float targetVy;  // новий режим
 	float angleSpeed;  	// Кутова швидкість повороту
 };
 

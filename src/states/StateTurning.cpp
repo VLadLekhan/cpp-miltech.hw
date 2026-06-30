@@ -1,26 +1,42 @@
 #include "../../include/states/StateTurning.hpp"
 #include "../../include/states/StateAccelerating.hpp"
+#include <iostream>
 
 std::unique_ptr<IDroneState> StateTurning::execute(DroneContext& ctx) {
-    Coord targetPos = ctx.provider->getTargetPosition(ctx.currentTargetIdx, ctx.currentTime);
-    ctx.desiredDir = std::atan2(targetPos.y - ctx.y, targetPos.x - ctx.x);
+    Target targetPos = ctx.provider->getTarget(ctx.currentTargetIdx);
+    float targetAngle = std::atan2(targetPos.pos.y - ctx.y, targetPos.pos.x - ctx.x);
+    ctx.desiredDir = std::atan2(targetPos.pos.y - ctx.y, targetPos.pos.x - ctx.x);
 
     float delta = DroneContext::normalizeAngle(ctx.desiredDir - ctx.direction);
-    float rotationStep = ctx.cfg.simtimestep * ctx.cfg.angularspeed;
+    float rotationStep = ctx.cfg.physicsTimeStep * ctx.cfg.angularspeed;
 
-    if (std::abs(delta) > 0.01f) { 
+    if (std::abs(delta) <= rotationStep) { 
+        ctx.direction = targetAngle; // Фіксуємо точний кут
+        return std::make_unique<StateAccelerating>();
+    }
+
+    DroneCommand cmd;
+    cmd.state = DroneMode::TURNING; 
+    cmd.targetVx = 0.0f; 
+    cmd.targetVy = 0.0f;
+    cmd.angleSpeed = (delta > 0.0) ? ctx.cfg.angularspeed : -ctx.cfg.angularspeed;
+
+    ctx.physics->sendCommand(cmd);
+
+    std::cout << "DEBUG:Turning!" << std::endl;
+
+   
         ctx.direction += (delta > 0.0) ? rotationStep : -rotationStep;
         ctx.direction = DroneContext::normalizeAngle(ctx.direction);
         return nullptr;
-    } else {
-        ctx.direction = ctx.desiredDir;
-        return std::make_unique<StateAccelerating>();
-    }
+    
+        
+    
 }
 
 float StateTurning::estimateTimeToChange(const DroneContext& ctx) {
-    Coord targetPos = ctx.provider -> getTargetPosition(ctx.currentTargetIdx, ctx.currentTime);
-    float targetAngle = std::atan2(targetPos.y - ctx.y, targetPos.x - ctx.x); 
+    Target targetPos = ctx.provider -> getTarget(ctx.currentTargetIdx);
+    float targetAngle = std::atan2(targetPos.pos.y - ctx.y, targetPos.pos.x - ctx.x); 
     float diff_angle = DroneContext::normalizeAngle(targetAngle - ctx.direction);
 
     return (std::abs(diff_angle) / ctx.cfg.angularspeed);
