@@ -5,11 +5,14 @@
 #include "Types.hpp"
 #include "interfaces/IBallisticSolver.hpp"
 #include "interfaces/ITargetProvider.hpp"
+#include "ThreadSafeQueue.hpp"
+#include "DronePhysics.hpp"
 
 struct DroneContext {
     std::unique_ptr<IBallisticSolver> solver;
-    std::unique_ptr<ITargetProvider> provider;
+    //std::unique_ptr<ITargetProvider> provider;
 
+    
     float x = 0.0f;
     float y = 0.0f;
     float direction = 0.0f;     
@@ -18,8 +21,13 @@ struct DroneContext {
     float targetDir = 0.0f;     
     float desiredDir = 0.0f;    
     int currentTargetIdx = 0;
+    int lastProcessedTargetIdx = -1;
     float currentTime = 0.0f;
     bool missionCompleted = false;
+    DronePhysics* physics = nullptr;
+    ITargetProvider* provider = nullptr;
+    ThreadSafeQueue<DroneCommand> commandQueue;
+
 
     DroneConfig cfg;
     

@@ -54,11 +54,13 @@ struct DroneConfig {
     std::string ammoName;  
     AmmoParams ammo;   
     float arraytimestep;    
-    float simtimestep;      
+    float targetTimestep;      
     float hitradius;        
     float angularspeed;     
     float turnThreshold;
     DropPoint droppoint;
+    float physicsTimeStep;
+    float timeScale;
 };
 
 struct SimStep {
@@ -70,6 +72,28 @@ struct SimStep {
     Coord aimPoint;     
     Coord predictedTarget;
 };
+
+enum class DroneMode {
+    STOPPED,
+    ACCELERATING,
+    DECELERATING,
+    TURNING,
+    MOVING
+};
+
+struct DroneTelemetry {
+    Coord pos;
+    Coord speed;
+    float timeSecSinceStart;
+};
+
+struct DroneCommand {
+	DroneMode state; 
+    float targetVx; // Додайте це, щоб StateMoving міг сказати, з якою швидкістю летіти
+    float targetVy;  // новий режим
+	float angleSpeed;  	// Кутова швидкість повороту
+};
+
 
 
 

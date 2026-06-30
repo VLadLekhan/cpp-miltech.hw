@@ -4,7 +4,7 @@
 #include "../../include/Types.hpp"
 
 #include <iostream>
-#include <cmath>
+#include <cmath>                     
 
 
 
@@ -20,17 +20,18 @@ std::unique_ptr<IDroneState> StateMoving::execute(DroneContext& ctx) {
     }
 
     BallisticResult result = ctx.solver->csolve(ctx.cfg.altitude, ctx.currentSpeed, ctx.cfg.ammo);
-    Coord targetPos = ctx.provider->getTargetPosition(ctx.currentTargetIdx, ctx.currentTime);
-    Coord nextTargetPos = ctx.provider->getTargetPosition(ctx.currentTargetIdx, ctx.currentTime + ctx.cfg.simtimestep);
+    Target targetPos = ctx.provider->getTarget(ctx.currentTargetIdx);
+    //Target nextTargetPos = ctx.provider->getTarget(ctx.currentTargetIdx);
     
     
-    float vx = (nextTargetPos.x - targetPos.x) / ctx.cfg.simtimestep;
-    float vy = (nextTargetPos.y - targetPos.y) / ctx.cfg.simtimestep;
-    float tx = targetPos.x + vx * result.timeOfFlight;
-    float ty = targetPos.y + vy * result.timeOfFlight;
+    float vx = targetPos.velocity.x;
+    float vy = targetPos.velocity.y;
+    float tx = targetPos.pos.x + vx * result.timeOfFlight;
+    float ty = targetPos.pos.y + vy * result.timeOfFlight;
     
 
     float distToDrop = std::hypot(tx - ctx.x, ty - ctx.y);
+
     if (distToDrop <= ctx.cfg.hitradius) {
         std::cout << "[LOG] Бомбу скинуто на ціль: " << ctx.currentTargetIdx << std::endl;
         dropped_ = true;
@@ -49,8 +50,14 @@ std::unique_ptr<IDroneState> StateMoving::execute(DroneContext& ctx) {
     }
 
     float speed = std::min(ctx.currentSpeed, 500.0f);
-    ctx.x += speed * std::cos(ctx.direction) * ctx.cfg.simtimestep;
-    ctx.y += speed * std::sin(ctx.direction) * ctx.cfg.simtimestep;
+
+    DroneCommand cmd;
+    cmd.state = DroneMode::MOVING;
+    cmd.targetVx = speed * std::cos(ctx.direction);
+    cmd.targetVy = speed * std::sin(ctx.direction);
+    cmd.angleSpeed = 0.0f;
+
+    ctx.physics->sendCommand(cmd);
 
     ctx.cfg.droppoint.fire.x = ctx.x + result.horizontalDist * std::cos(ctx.direction);
     ctx.cfg.droppoint.fire.y = ctx.y + result.horizontalDist * std::sin(ctx.direction);
