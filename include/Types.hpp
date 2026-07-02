@@ -54,11 +54,13 @@ struct DroneConfig {
     std::string ammoName;  
     AmmoParams ammo;   
     float arraytimestep;    
-    float simtimestep;      
+    float targetTimestep;      
     float hitradius;        
     float angularspeed;     
     float turnThreshold;
     DropPoint droppoint;
+    float physicsTimeStep;
+    float timeScale;
 };
 
 struct SimStep {
@@ -69,7 +71,31 @@ struct SimStep {
     Coord dropPoint;    
     Coord aimPoint;     
     Coord predictedTarget;
+    float timeSecSinceStart;  
 };
+
+enum class DroneMode {
+    STOPPED,
+    ACCELERATING,
+    DECELERATING,
+    TURNING,
+    MOVING
+};
+
+struct DroneTelemetry {
+    Coord pos;
+    Coord speed;
+    float timeSecSinceStart;
+    DroneMode mode = DroneMode::STOPPED;
+};
+
+struct DroneCommand {
+	DroneMode state; 
+    float targetVx; 
+    float targetVy;  
+	float angleSpeed;  	
+};
+
 
 
 

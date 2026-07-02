@@ -11,4 +11,5 @@ class StateAccelerating : public IDroneState {
 
     float estimateTimeToChange(const DroneContext& ctx) override;
     bool isFinished() const override;
+    bool canRetarget() const override { return false; }
 };

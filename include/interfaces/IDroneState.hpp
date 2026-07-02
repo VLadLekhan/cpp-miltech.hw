@@ -13,5 +13,6 @@ class IDroneState {
     virtual const char* name() const = 0;
     virtual float estimateTimeToChange(const DroneContext& ctx) = 0;
     virtual bool isFinished() const = 0;
+    virtual bool canRetarget() const = 0;
 };
 

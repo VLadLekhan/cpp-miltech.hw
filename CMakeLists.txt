@@ -4,10 +4,10 @@ project(cppmiltech_hw LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Зберіть тут усі ваші .cpp файли
 set(SOURCES 
     src/main.cpp
     src/MissionProcessor.cpp
+    src/DronePhysics.cpp
     src/providers/JsonTargetProvider.cpp
     src/solvers/AnalyticalSolver.cpp
     src/solvers/TableSolver.cpp
@@ -23,6 +23,4 @@ set(SOURCES
 
 add_executable(cppmiltech_bin ${SOURCES})
 
-# Додаємо лише корінь 'include'. 
-# Тепер в коді ви просто пишете #include "interfaces/ITargetProvider.hpp"
 target_include_directories(cppmiltech_bin PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
