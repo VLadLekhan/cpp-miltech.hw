@@ -71,6 +71,7 @@ struct SimStep {
     Coord dropPoint;    
     Coord aimPoint;     
     Coord predictedTarget;
+    float timeSecSinceStart;  
 };
 
 enum class DroneMode {
@@ -85,13 +86,14 @@ struct DroneTelemetry {
     Coord pos;
     Coord speed;
     float timeSecSinceStart;
+    DroneMode mode = DroneMode::STOPPED;
 };
 
 struct DroneCommand {
 	DroneMode state; 
-    float targetVx; // Додайте це, щоб StateMoving міг сказати, з якою швидкістю летіти
-    float targetVy;  // новий режим
-	float angleSpeed;  	// Кутова швидкість повороту
+    float targetVx; 
+    float targetVy;  
+	float angleSpeed;  	
 };
 
 

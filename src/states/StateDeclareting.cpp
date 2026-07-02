@@ -6,10 +6,10 @@
 std::unique_ptr<IDroneState> StateDeclareting::execute (DroneContext& ctx) {
 
     float acceleration = std::pow(ctx.cfg.attackSpeed, 2.0) / (2.0 * ctx.cfg.accelerationPath);
-    float nextSpeed = std::max(0.0f, ctx.currentSpeed - (acceleration * ctx.cfg.physicsTimeStep));
+    float nextSpeed = std::max(0.0f, ctx.currentSpeed - (acceleration * ctx.dt));
     
    DroneCommand cmd;
-    cmd.state = DroneMode::DECELERATING; // Тепер ми чітко кажемо Фізиці: це гальмування
+    cmd.state = DroneMode::DECELERATING; 
     cmd.targetVx = nextSpeed * std::cos(ctx.direction);
     cmd.targetVy = nextSpeed * std::sin(ctx.direction);
     cmd.angleSpeed = 0.0f;
@@ -20,7 +20,6 @@ std::unique_ptr<IDroneState> StateDeclareting::execute (DroneContext& ctx) {
 
     std::cout << "DEBUG: Declareting, current speed: " << ctx.currentSpeed << std::endl;
 
-    // 3. Умова завершення гальмування
     if (ctx.currentSpeed <= 0.1f) {
         ctx.currentSpeed = 0.0f;
 

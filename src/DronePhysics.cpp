@@ -33,28 +33,35 @@ bool DronePhysics::isThreadReady() const {
 void DronePhysics::run() {
     auto sleepDuration = std::chrono::milliseconds(static_cast<int>(cfg.physicsTimeStep * 1000));
     threadReady_ = true;
-    
+    lastTick_ = std::chrono::steady_clock::now();
+
+
     while(isRunning) {
-    processCommands();
+        processCommands();
 
-    integrate(cfg.physicsTimeStep);
+        auto now = std::chrono::steady_clock::now();
+        float dt = std::chrono::duration<float>(now - lastTick_).count();
+        lastTick_ = now;
 
-    timeSecSinceStart += cfg.physicsTimeStep;
+        if (dt > 0.25f) dt = cfg.physicsTimeStep;
 
-    std::this_thread::sleep_for(sleepDuration);
+        integrate(dt);
+
+        std::this_thread::sleep_for(sleepDuration);
     }
 }
+
 
 void DronePhysics::integrate(float dt) {
     std::lock_guard<std::mutex> lock(mtx);
     x += vx * dt;
     y += vy * dt;
-    timeSecSinceStart += dt;
+    timeSecSinceStart += dt; 
 }
 
 DroneTelemetry DronePhysics::getTelemetry(){
     std::lock_guard<std::mutex> lock(mtx);
-    return {x, y, vx, vy, timeSecSinceStart};
+    return {x, y, vx, vy, timeSecSinceStart, currentMode_};
 }
 
 void DronePhysics::sendCommand(DroneCommand cmd) {
@@ -63,22 +70,7 @@ void DronePhysics::sendCommand(DroneCommand cmd) {
 
 void DronePhysics::applyCommand(const DroneCommand& cmd){
     std::lock_guard<std::mutex> lock(mtx);
-    switch (cmd.state) {
-        case DroneMode::ACCELERATING:
-            break;
-        case DroneMode::MOVING:
-            break;
-        case DroneMode::DECELERATING:
-            break;
-        case DroneMode::STOPPED:
-            break;
-        case DroneMode::TURNING:
-            break;
-        default:
-            break;
-    }
-
-    // Застосовуємо вектор швидкості
+    currentMode_ = cmd.state;
     vx = cmd.targetVx;
     vy = cmd.targetVy;
 }

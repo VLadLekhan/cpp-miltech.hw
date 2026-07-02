@@ -5,6 +5,7 @@
 #include<thread>
 #include<atomic>
 #include<mutex>
+#include<chrono>
 
 
 class DronePhysics {
@@ -19,6 +20,8 @@ class DronePhysics {
     std::atomic<bool> threadReady_{false};
     mutable std::mutex mtx;
     ThreadSafeQueue<DroneCommand> commandQueue;
+    std::chrono::steady_clock::time_point lastTick_;
+    DroneMode currentMode_ = DroneMode::STOPPED;
 
                 
     void integrate(float dt); 

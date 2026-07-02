@@ -37,15 +37,12 @@ int main() {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
-    // 5. Старт симуляції
     provider->start();
     physics->start();
-    // processor.start(); // Якщо в місії є свій прапорець start()
-
-    // 6. Очікування завершення МІСІЇ
+   
     missionThread.join();
+    processor.saveLog("simulation.json");
 
-    // 7. Зупинка сервісних потоків
     physics->stop();
     provider->stop();
 

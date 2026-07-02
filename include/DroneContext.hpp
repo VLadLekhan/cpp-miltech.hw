@@ -10,7 +10,6 @@
 
 struct DroneContext {
     std::unique_ptr<IBallisticSolver> solver;
-    //std::unique_ptr<ITargetProvider> provider;
 
     
     float x = 0.0f;
@@ -19,10 +18,12 @@ struct DroneContext {
     float currentSpeed = 0.0f;  
     float turnRemaining = 0.0f; 
     float targetDir = 0.0f;     
-    float desiredDir = 0.0f;    
+    float desiredDir = 0.0f;  
+    Coord aimPoint;  
     int currentTargetIdx = 0;
     int lastProcessedTargetIdx = -1;
     float currentTime = 0.0f;
+    float dt = 0.0f;
     bool missionCompleted = false;
     DronePhysics* physics = nullptr;
     ITargetProvider* provider = nullptr;

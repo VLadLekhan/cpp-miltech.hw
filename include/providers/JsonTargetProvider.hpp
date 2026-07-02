@@ -23,9 +23,7 @@
          std::atomic<bool> isRunning;
          std::atomic<bool> threadReady_{false};
          mutable std::mutex mtx;
-        
-         //ThreadSafeQueue<DroneCommand> commandQueue;
-         
+          
          Target calculateNextStateInternal(int i, float t);
          Target calculateNextState(int i, float t);
          

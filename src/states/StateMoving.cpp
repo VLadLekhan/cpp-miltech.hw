@@ -21,21 +21,21 @@ std::unique_ptr<IDroneState> StateMoving::execute(DroneContext& ctx) {
 
     BallisticResult result = ctx.solver->csolve(ctx.cfg.altitude, ctx.currentSpeed, ctx.cfg.ammo);
     Target targetPos = ctx.provider->getTarget(ctx.currentTargetIdx);
-    //Target nextTargetPos = ctx.provider->getTarget(ctx.currentTargetIdx);
-    
     
     float vx = targetPos.velocity.x;
     float vy = targetPos.velocity.y;
     float tx = targetPos.pos.x + vx * result.timeOfFlight;
     float ty = targetPos.pos.y + vy * result.timeOfFlight;
+    ctx.aimPoint = {tx, ty};
     
-
+    std::cout << "ctx.x=" << ctx.x << " ctx.y=" << ctx.y << std::endl;
     float distToDrop = std::hypot(tx - ctx.x, ty - ctx.y);
 
     if (distToDrop <= ctx.cfg.hitradius) {
         std::cout << "[LOG] Бомбу скинуто на ціль: " << ctx.currentTargetIdx << std::endl;
         dropped_ = true;
         ctx.missionCompleted = true;
+        isFinished();
         return nullptr;
     }
 
@@ -44,7 +44,7 @@ std::unique_ptr<IDroneState> StateMoving::execute(DroneContext& ctx) {
     float angleToTarget = std::atan2(ty - ctx.y, tx - ctx.x);
     float diff = DroneContext::normalizeAngle(angleToTarget - ctx.direction);
 
-    if (std::abs(diff) > 0.3f) {
+    if (std::abs(diff) > ctx.cfg.turnThreshold) {
         ctx.desiredDir = angleToTarget;
         return std::make_unique<StateTurning>();
     }

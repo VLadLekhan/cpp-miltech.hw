@@ -4,11 +4,17 @@
 
 std::unique_ptr<IDroneState> StateTurning::execute(DroneContext& ctx) {
     Target targetPos = ctx.provider->getTarget(ctx.currentTargetIdx);
-    float targetAngle = std::atan2(targetPos.pos.y - ctx.y, targetPos.pos.x - ctx.x);
-    ctx.desiredDir = std::atan2(targetPos.pos.y - ctx.y, targetPos.pos.x - ctx.x);
+    BallisticResult result = ctx.solver->csolve(ctx.cfg.altitude, ctx.currentSpeed, ctx.cfg.ammo);
+
+    float tx = targetPos.pos.x + targetPos.velocity.x * result.timeOfFlight;
+    float ty = targetPos.pos.y + targetPos.velocity.y * result.timeOfFlight;
+    ctx.aimPoint = {tx, ty};
+
+    float targetAngle = std::atan2(ty - ctx.y, tx - ctx.x);
+    ctx.desiredDir = targetAngle;
 
     float delta = DroneContext::normalizeAngle(ctx.desiredDir - ctx.direction);
-    float rotationStep = ctx.cfg.physicsTimeStep * ctx.cfg.angularspeed;
+    float rotationStep = ctx.dt * ctx.cfg.angularspeed;
 
     if (std::abs(delta) <= rotationStep) { 
         ctx.direction = targetAngle; // Фіксуємо точний кут
@@ -35,8 +41,13 @@ std::unique_ptr<IDroneState> StateTurning::execute(DroneContext& ctx) {
 }
 
 float StateTurning::estimateTimeToChange(const DroneContext& ctx) {
-    Target targetPos = ctx.provider -> getTarget(ctx.currentTargetIdx);
-    float targetAngle = std::atan2(targetPos.pos.y - ctx.y, targetPos.pos.x - ctx.x); 
+    Target targetPos = ctx.provider->getTarget(ctx.currentTargetIdx);
+    BallisticResult result = ctx.solver->csolve(ctx.cfg.altitude, ctx.currentSpeed, ctx.cfg.ammo);
+
+    float tx = targetPos.pos.x + targetPos.velocity.x * result.timeOfFlight;
+    float ty = targetPos.pos.y + targetPos.velocity.y * result.timeOfFlight;
+
+    float targetAngle = std::atan2(ty - ctx.y, tx - ctx.x);
     float diff_angle = DroneContext::normalizeAngle(targetAngle - ctx.direction);
 
     return (std::abs(diff_angle) / ctx.cfg.angularspeed);

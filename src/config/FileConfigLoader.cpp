@@ -27,7 +27,7 @@ void FileConfigLoader::load() {
     m_config.targetTimestep = data["simulation"]["taregetTimeStep"].get<float>();
     m_config.physicsTimeStep = data["simulation"]["physicsTimeStep"].get<float>();
     m_config.timeScale = data["simulation"]["timeScale"].get<float>();
-    m_config.ammo = m_ammo;
+    
     
     std::string ammoName = data.at("ammo").get<std::string>();
 
@@ -51,6 +51,7 @@ void FileConfigLoader::load() {
             break;
         }
     }
+    m_config.ammo = m_ammo;
 
     if (!found) {
         std::cerr << "Warning: Ammo " << ammoName << " not found!" << std::endl;

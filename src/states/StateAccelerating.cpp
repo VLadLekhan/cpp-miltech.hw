@@ -9,7 +9,7 @@ std::unique_ptr<IDroneState> StateAccelerating::execute (DroneContext& ctx) {
     float acceleration = std::pow(ctx.cfg.attackSpeed, 2.0) / (2.0 * ctx.cfg.accelerationPath);
     if (acceleration < 0.001f) acceleration = 1.0f;
 
-    float nextSpeed = ctx.currentSpeed + (acceleration * ctx.cfg.physicsTimeStep);
+    float nextSpeed = ctx.currentSpeed + (acceleration * ctx.dt);
 
     if (nextSpeed >= ctx.cfg.attackSpeed) {
         nextSpeed = ctx.cfg.attackSpeed;

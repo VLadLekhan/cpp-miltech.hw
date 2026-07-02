@@ -1,6 +1,7 @@
 #include "../include/MissionProcessor.hpp"
 #include "../include/states/StateDeclareting.hpp"
-#include <algorithm>
+ #include "../include/nlohmann/json.hpp"
+ #include <fstream>
 #include <limits>
 #include <iostream>
 
@@ -19,6 +20,7 @@
     ctx_.currentTargetIdx = 0;
     ctx_.lastProcessedTargetIdx = -1;
     ctx_.currentTime = 0.0f;
+    lastStepTime_ = std::chrono::steady_clock::now();
    }
 
    float MissionProcessor::calculateDistance(float x, float y, Target c) {
@@ -63,6 +65,11 @@
    
 } 
    DropPoint MissionProcessor::step() {
+   auto now = std::chrono::steady_clock::now();
+     ctx_.dt = std::chrono::duration<float>(now - lastStepTime_).count();
+     lastStepTime_ = now;
+     if (ctx_.dt > 0.25f) ctx_.dt = ctx_.cfg.physicsTimeStep; 
+
      DroneTelemetry droneTelemetry = ctx_.physics->getTelemetry();
 
      ctx_.x = droneTelemetry.pos.x;
@@ -70,7 +77,7 @@
      ctx_.currentSpeed = std::sqrt(std::pow(droneTelemetry.speed.x, 2) + std::pow(droneTelemetry.speed.y, 2));
      ctx_.currentTime = droneTelemetry.timeSecSinceStart;
 
-     selectBestTarget();
+     if (currentState_->canRetarget()) selectBestTarget();
 
      if(currentState_){
       auto nextState = currentState_->execute(ctx_);
@@ -79,6 +86,17 @@
          currentState_ = std::move(nextState);
       }
      }
+      SimStep entry;
+      entry.pos = {ctx_.x, ctx_.y};
+      entry.direction = ctx_.direction;
+      entry.state = static_cast<int>(droneTelemetry.mode);
+      entry.targetIdx = ctx_.currentTargetIdx;
+      entry.dropPoint = ctx_.cfg.droppoint.fire;
+      entry.aimPoint = ctx_.aimPoint;
+      entry.predictedTarget = ctx_.provider->getTarget(ctx_.currentTargetIdx).pos;
+      entry.timeSecSinceStart = droneTelemetry.timeSecSinceStart;
+      log_.push_back(entry);
+
      return {ctx_.cfg.droppoint.fire.x, ctx_.cfg.droppoint.fire.y};
    }
 
@@ -86,7 +104,7 @@
     // Розрахунок періоду виконання на основі конфігу
     auto sleepDuration = std::chrono::milliseconds(static_cast<int>(ctx_.cfg.physicsTimeStep * 1000));
     
-    while (isRunning) {
+    while (isRunning && !ctx_.missionCompleted) {
         step();
         std::this_thread::sleep_for(sleepDuration);
     }
@@ -96,6 +114,29 @@ void MissionProcessor::stop() {
     isRunning = false;
 }
 
-   void MissionProcessor::changeSolver(std::unique_ptr<IBallisticSolver> s) {
-      solver_ = std::move(s);
-   }
+void MissionProcessor::changeSolver(std::unique_ptr<IBallisticSolver> s) {
+   solver_ = std::move(s);
+}
+
+void MissionProcessor::saveLog(const std::string& path) const {
+    nlohmann::json root;
+    nlohmann::json stepsArr = nlohmann::json::array();
+
+    for (const auto& s : log_) {
+        nlohmann::json step;
+        step["position"] = {s.pos.x, s.pos.y};
+        step["direction"] = s.direction;
+        step["state"] = s.state;
+        step["targetIndex"] = s.targetIdx;
+        step["dropPoint"] = {s.dropPoint.x, s.dropPoint.y};
+        step["aimPoint"] = {s.aimPoint.x, s.aimPoint.y};
+        step["predictedTarget"] = {s.predictedTarget.x, s.predictedTarget.y};
+        step["timeSecSinceStart"] = s.timeSecSinceStart;
+        stepsArr.push_back(step);
+    }
+
+    root["steps"] = stepsArr;
+
+    std::ofstream out(path);
+    out << root.dump(2);
+}

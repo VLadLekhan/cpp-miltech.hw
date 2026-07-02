@@ -1,7 +1,7 @@
 #pragma once 
 
 #include <memory>
-
+#include <chrono>
 #include <cmath>
 #include "Types.hpp"
 #include "DroneContext.hpp" 
@@ -22,6 +22,8 @@
         std::shared_ptr<DronePhysics> physics_;
 
         std::atomic<bool> isRunning{false};
+        std::chrono::steady_clock::time_point lastStepTime_;
+        std::vector<SimStep> log_;
 
         public:
         MissionProcessor(std::unique_ptr<IBallisticSolver> solver, std::unique_ptr<IConfigLoader> loader, std::shared_ptr<ITargetProvider> provider, std::shared_ptr<DronePhysics> physics);
@@ -37,5 +39,6 @@
 
         void reset();
         void changeSolver(std::unique_ptr<IBallisticSolver> s);
+        void saveLog(const std::string& path) const;
 
     };
