@@ -1,22 +1,22 @@
 #include "../../include/states/StateStopped.hpp"
-#include <memory>
 #include "../../include/states/StateTurning.hpp"
 #include "../../include/states/StateAccelerating.hpp"
+#include <iostream>
+#include <memory>
+
 
 std::unique_ptr<IDroneState> StateStopped::execute(DroneContext& ctx) {
-    Coord targetPos = ctx.provider->getTargetPosition(ctx.currentTargetIdx, ctx.currentTime);
-    ctx.desiredDir = std::atan2(targetPos.y - ctx.y, targetPos.x - ctx.x);
 
-    float delta = DroneContext::normalizeAngle(
-            ctx.desiredDir - ctx.direction);
- 
-        if (std::fabs(delta) > ctx.cfg.turnThreshold) {
-            ctx.targetDir = ctx.desiredDir;
+    ctx.currentTurnRate = 0.0f;
+    ctx.currentAccel = 0.0f;
+    float targetAngle = std::atan2(ctx.targets.y - ctx.telemetry.y, ctx.targets.x - ctx.telemetry.x);
+    float delta = DroneContext::normalizeAngle(targetAngle - ctx.telemetry.dir);
+
+    if (std::fabs(delta) > ctx.config.turnThreshold) {
         return std::make_unique<StateTurning>();
-        }
-        
-        ctx.direction = ctx.desiredDir;
-        return std::make_unique<StateAccelerating>();
+    }
+
+    return std::make_unique<StateAccelerating>();
 
 }
 

@@ -1,57 +1,51 @@
 #include <iostream>
+#include <cstring>
+#include <chrono>
 #include <memory>
+#include <thread>
 
 #include "../include/MissionProcessor.hpp"
-
-#include "../include/config/FileConfigLoader.hpp"
-#include "../include/providers/JsonTargetProvider.hpp"
+#include "../include/drivers/uart_manager.hpp"
+#include "../include/drivers/gpiod.hpp"
 #include "../include/solvers/AnalyticalSolver.hpp"
-#include "../include/solvers/TableSolver.hpp"
-
 #include "../include/states/StateStopped.hpp"
-#include "../include/states/StateMoving.hpp"
-#include "../include/states/StateTurning.hpp"
 
-int main() {
+
+int main(int argc, char** argv) {
     std::cout << "=== Наземна станція керування: Старт місії ===" << std::endl;
 
-    auto analyticalSolver = std::make_unique<AnalyticalSolver>();
-    auto tableSolver = std::make_unique<TableSolver>("data/ballistic_table.txt");
-    auto loader = std::make_unique<FileConfigLoader>("data/config.json");
-    auto provider = std::make_unique<JsonTargetProvider>("data/targets.json");
+    std::string uartDev = "/tmp/ttyA";
+    std::string gpiochip = "gpiochip";
+    int startLine = 24;
+    int dropLine = 23;
 
-    MissionProcessor processor (std::move(tableSolver), std::move(loader), std::move(provider));
+    for(int i = 1; i < argc; ++i) {
+       if (!strcmp(argv[i], "--uart") && i+1 < argc) uartDev = argv[++i];
+        else if (!strcmp(argv[i], "--gpiochip") && i+1 < argc) gpiochip = argv[++i];
+        else if (!strcmp(argv[i], "--start-line") && i+1 < argc) startLine = std::atoi(argv[++i]);
+        else if (!strcmp(argv[i], "--drop-line") && i+1 < argc) dropLine = std::atoi(argv[++i]); 
+    }
 
+    std::cout << "=== Автопілот: старт ===" << std::endl;
+
+    UartManager uart(uartDev.c_str());
+    GpioManager gpio(gpiochip.c_str(), startLine,  dropLine);
+
+    uart.update();
+    while (uart.getAmmo().nTargets == 0) {
+        uart.update();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    std::cout << "[LOG] Отримано перші дані від чекера, стартуємо місію" << std::endl;
+
+    auto solver = std::make_unique<AnalyticalSolver>();
+    MissionProcessor processor (std::move(solver), &uart, &gpio );
     processor.init(std::make_unique<StateStopped>());
 
+    processor.run();
 
-    std::cout << "\nЗапуск покрокового розрахунку балістики..." << std::endl;
-
-    int counter = 0;
-    const int maxSteps = 1000;
-
-    while (counter < maxSteps) {
-    processor.step();
-
-    if (processor.getContext().missionCompleted) {
-             std::cout << "[LOG] Бомбу скинуто. Місія успішна!" << std::endl;
-             break;
-        }
-
-    std::cout << "DEBUG: Час: " << processor.getContext().currentTime 
-          << " | Швидкість: " << processor.getContext().currentSpeed 
-          << " | Координати: (" << processor.getContext().x << ", " << processor.getContext().y << ")" << std::endl;
-
-    counter++;
-}
-
-if (counter >= maxSteps) {
-    std::cout << "ПОМИЛКА: Місія не завершилася за 1000 кроків!" << std::endl;
-}
-
-    std::cout << "\n=============================================" << std::endl;
-
-    std::cout << "=== Місія завершена успішно ===" << std::endl;
+    std::cout << "=== Місія завершена ===" << std::endl;
     return 0;
+
 }
 

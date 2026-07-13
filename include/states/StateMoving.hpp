@@ -14,5 +14,5 @@ class StateMoving : public IDroneState {
 
     float estimateTimeToChange(const DroneContext& ctx) override;
 
-    bool isFinished() const override ;
+    bool isFinished() const override;
 };

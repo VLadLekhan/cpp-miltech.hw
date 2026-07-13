@@ -3,64 +3,46 @@
 #include "../../include/interfaces/ITargetProvider.hpp"
 #include "../../include/Types.hpp"
 
+
 #include <iostream>
-#include <cmath>
+#include <cmath>                     
 
 
 
 std::unique_ptr<IDroneState> StateMoving::execute(DroneContext& ctx) {
 
-    if (!ctx.solver) {
-        std::cerr << "CRITICAL ERROR: ctx.solver is NULL in StateMoving!" << std::endl;
-        return nullptr;
-    }
-    if (!ctx.provider) {
-        std::cerr << "CRITICAL ERROR: ctx.provider is NULL in StateMoving!" << std::endl;
-        return nullptr;
-    }
+    ctx.currentTurnRate = 0.0f;
+    BallisticResult result = ctx.solver->csolve(ctx.telemetry.z, ctx.telemetry.speed, ctx.ammo);
 
-    BallisticResult result = ctx.solver->csolve(ctx.cfg.altitude, ctx.currentSpeed, ctx.cfg.ammo);
-    Coord targetPos = ctx.provider->getTargetPosition(ctx.currentTargetIdx, ctx.currentTime);
-    Coord nextTargetPos = ctx.provider->getTargetPosition(ctx.currentTargetIdx, ctx.currentTime + ctx.cfg.simtimestep);
-    
-    
-    float vx = (nextTargetPos.x - targetPos.x) / ctx.cfg.simtimestep;
-    float vy = (nextTargetPos.y - targetPos.y) / ctx.cfg.simtimestep;
-    float tx = targetPos.x + vx * result.timeOfFlight;
-    float ty = targetPos.y + vy * result.timeOfFlight;
-    
+    float tx = ctx.targets.x;
+    float ty = ctx.targets.y;
 
-    float distToDrop = std::hypot(tx - ctx.x, ty - ctx.y);
-    if (distToDrop <= ctx.cfg.hitradius) {
+    float distToDrop = std::hypot(tx - ctx.telemetry.x, ty - ctx.telemetry.y);
+
+    if (distToDrop <= ctx.ammo.hitRadius) {
         std::cout << "[LOG] Бомбу скинуто на ціль: " << ctx.currentTargetIdx << std::endl;
         dropped_ = true;
         ctx.missionCompleted = true;
+        ctx.dropRequested = true;
         return nullptr;
     }
 
     std::cout << "DEBUG: Aiming at: (" << tx << ", " << ty << ") | Dist: " << distToDrop << std::endl;
     
-    float angleToTarget = std::atan2(ty - ctx.y, tx - ctx.x);
-    float diff = DroneContext::normalizeAngle(angleToTarget - ctx.direction);
+    float angleToTarget = std::atan2(ty - ctx.telemetry.y, tx - ctx.telemetry.x);
+    float diff = DroneContext::normalizeAngle(angleToTarget - ctx.telemetry.dir);
 
     if (std::abs(diff) > 0.3f) {
-        ctx.desiredDir = angleToTarget;
         return std::make_unique<StateTurning>();
     }
 
-    float speed = std::min(ctx.currentSpeed, 500.0f);
-    ctx.x += speed * std::cos(ctx.direction) * ctx.cfg.simtimestep;
-    ctx.y += speed * std::sin(ctx.direction) * ctx.cfg.simtimestep;
-
-    ctx.cfg.droppoint.fire.x = ctx.x + result.horizontalDist * std::cos(ctx.direction);
-    ctx.cfg.droppoint.fire.y = ctx.y + result.horizontalDist * std::sin(ctx.direction);
-
+    ctx.currentAccel = 0.0f;
     return nullptr;
 }
 
 float StateMoving::estimateTimeToChange(const DroneContext& ctx) {
-    float acceleration = std::pow(ctx.cfg.attackSpeed, 2.0) / (2.0 * ctx.cfg.accelerationPath);
-    return ctx.cfg.attackSpeed / acceleration;
+    float acceleration = std::pow(ctx.config.attackSpeed, 2.0) / (2.0 * ctx.config.accelerationPath);
+    return ctx.config.attackSpeed / acceleration;
 }
 
 bool StateMoving::isFinished() const { return dropped_; }

@@ -1,30 +1,27 @@
 #include "../../include/states/StateDeclareting.hpp"
 #include "../../include/states/StateTurning.hpp"
+#include <iostream>
+
 
 std::unique_ptr<IDroneState> StateDeclareting::execute (DroneContext& ctx) {
 
-    float acceleration = std::pow(ctx.cfg.attackSpeed, 2.0) / (2.0 * ctx.cfg.accelerationPath);
-    
-    if (ctx.currentSpeed > 0) {
-        ctx.currentSpeed -=  acceleration * ctx.cfg.simtimestep;
-    
-        if (ctx.currentSpeed <= 0) {
-        ctx.currentSpeed = 0;
-        }
+      ctx.currentTurnRate = 0.0f;
 
-        return nullptr;
-    }
+   if (ctx.telemetry.speed > 0.0f){
+    ctx.currentAccel = -1.0f;
+    std::cout << "DEBUG: Declarating, telemetry speed: " << ctx.telemetry.speed << std::endl;
+    return nullptr;
+   }
 
-    Coord targetPos = ctx.provider->getTargetPosition(ctx.currentTargetIdx, ctx.currentTime);
-    ctx.desiredDir = std::atan2(targetPos.y - ctx.y, targetPos.x - ctx.x);
-    ctx.targetDir = ctx.desiredDir;
-    
-    return std::make_unique<StateTurning>();
+   ctx.currentAccel = 0.0f;
+   return std::make_unique<StateTurning>();
 }
 
+
 float StateDeclareting::estimateTimeToChange(const DroneContext& ctx) {
-    float acceleration = std::pow(ctx.cfg.attackSpeed, 2.0) / (2.0 * ctx.cfg.accelerationPath);
-    return ctx.currentSpeed / acceleration;
+    float acceleration = std::pow(ctx.config.attackSpeed, 2.0) / (2.0 * ctx.config.accelerationPath);
+    if (acceleration < 0.01f) acceleration = 1.0f;
+    return (ctx.config.attackSpeed - ctx.telemetry.speed) / acceleration;
 }
 
 bool StateDeclareting::isFinished() const {

@@ -24,7 +24,9 @@ void FileConfigLoader::load() {
     m_config.turnThreshold = data["drone"]["turnThreshold"].get<float>();
     m_config.hitradius = data["simulation"]["hitRadius"].get<float>();
     m_config.arraytimestep = data["targetArrayTimeStep"].get<float>();
-    m_config.simtimestep = data["simulation"]["timeStep"].get<float>();
+    m_config.targetTimestep = data["simulation"]["taregetTimeStep"].get<float>();
+    m_config.physicsTimeStep = data["simulation"]["physicsTimeStep"].get<float>();
+    m_config.timeScale = data["simulation"]["timeScale"].get<float>();
     m_config.ammo = m_ammo;
     
     std::string ammoName = data.at("ammo").get<std::string>();
