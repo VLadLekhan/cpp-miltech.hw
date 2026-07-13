@@ -89,7 +89,7 @@ TableSolver::TableSolver(const std::string& path) {
         throw std::runtime_error("Table load failed");
 }
 
-BallisticResult TableSolver::csolve(float atitude, float speed, const AmmoParams& ammo) const {
+BallisticResult TableSolver::csolve(float atitude, float speed, const dlink::AmmoCfg& ammo) const {
     auto res = table_.lookup(atitude, speed, ammo.mass, ammo.drag, ammo.lift);
     return {res.t, res.hDist};
 }

@@ -18,9 +18,15 @@ set(SOURCES
     src/states/StateDeclareting.cpp
     src/states/StateTurning.cpp
     src/states/StateMoving.cpp
+    src/drivers/uart_manager.cpp
+    src/drivers/gpiod.cpp 
 )
-
 
 add_executable(cppmiltech_bin ${SOURCES})
 
 target_include_directories(cppmiltech_bin PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GPIOD REQUIRED libgpiod)
+target_link_libraries(cppmiltech_bin PRIVATE ${GPIOD_LIBRARIES})
+target_include_directories(cppmiltech_bin PRIVATE ${GPIOD_INCLUDE_DIRS})
