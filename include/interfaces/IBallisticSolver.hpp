@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Types.hpp"
+#include "../drone_link.hpp"
 
 struct BallisticResult {
     float timeOfFlight;
@@ -12,7 +12,7 @@ class IBallisticSolver{
     virtual BallisticResult csolve( 
         float atitude, 
         float speed,
-        const AmmoParams& ammo) const = 0;
+        const dlink::AmmoCfg& ammo) const = 0;
         
     virtual ~IBallisticSolver() {}
 };

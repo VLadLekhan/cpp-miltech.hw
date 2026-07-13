@@ -1,12 +1,13 @@
 #include "../../include/solvers/AnalyticalSolver.hpp"
+#include <cmath>
 
-BallisticResult AnalyticalSolver::csolve(float atitude, float speed,const AmmoParams& ammo) const {
+BallisticResult AnalyticalSolver::csolve(float atitude, float speed, const dlink::AmmoCfg& ammo) const {
    float t = calculatingTime(atitude, speed, ammo);
    float hDist = horizontalDist(t, speed, ammo.mass, ammo.drag, ammo.lift);
    return {t, hDist};
 }
 
-float AnalyticalSolver::calculatingTime(float zd,float attackSpeed, const AmmoParams& ammo) const {
+float AnalyticalSolver::calculatingTime(float zd,float attackSpeed, const dlink::AmmoCfg& ammo) const {
     float m = ammo.mass;
     float d = ammo.drag;
     float l = ammo.lift;

@@ -3,43 +3,30 @@
 #include <iostream>
 
 std::unique_ptr<IDroneState> StateTurning::execute(DroneContext& ctx) {
-    Target targetPos = ctx.provider->getTarget(ctx.currentTargetIdx);
-    float targetAngle = std::atan2(targetPos.pos.y - ctx.y, targetPos.pos.x - ctx.x);
-    ctx.desiredDir = std::atan2(targetPos.pos.y - ctx.y, targetPos.pos.x - ctx.x);
 
-    float delta = DroneContext::normalizeAngle(ctx.desiredDir - ctx.direction);
-    float rotationStep = ctx.cfg.physicsTimeStep * ctx.cfg.angularspeed;
+    ctx.currentAccel = 0.0f;
+
+
+    
+    float targetAngle = std::atan2(ctx.targets.y- ctx.telemetry.y, ctx.targets.x- ctx.telemetry.x);
+
+    float delta = DroneContext::normalizeAngle(targetAngle - ctx.telemetry.dir);
+    float rotationStep = ctx.config.timeStep * ctx.config.angularSpeed;
 
     if (std::abs(delta) <= rotationStep) { 
-        ctx.direction = targetAngle; // Фіксуємо точний кут
         return std::make_unique<StateAccelerating>();
     }
 
-    DroneCommand cmd;
-    cmd.state = DroneMode::TURNING; 
-    cmd.targetVx = 0.0f; 
-    cmd.targetVy = 0.0f;
-    cmd.angleSpeed = (delta > 0.0) ? ctx.cfg.angularspeed : -ctx.cfg.angularspeed;
+    ctx.currentTurnRate = (delta > 0.0f) ? 1.0f : -1.0f;
 
-    ctx.physics->sendCommand(cmd);
-
-    std::cout << "DEBUG:Turning!" << std::endl;
-
-   
-        ctx.direction += (delta > 0.0) ? rotationStep : -rotationStep;
-        ctx.direction = DroneContext::normalizeAngle(ctx.direction);
-        return nullptr;
-    
-        
-    
+   return nullptr;  
 }
 
 float StateTurning::estimateTimeToChange(const DroneContext& ctx) {
-    Target targetPos = ctx.provider -> getTarget(ctx.currentTargetIdx);
-    float targetAngle = std::atan2(targetPos.pos.y - ctx.y, targetPos.pos.x - ctx.x); 
-    float diff_angle = DroneContext::normalizeAngle(targetAngle - ctx.direction);
+     float targetAngle = std::atan2(ctx.targets.y- ctx.telemetry.y, ctx.targets.x- ctx.telemetry.x);
+    float diff_angle = DroneContext::normalizeAngle(targetAngle - ctx.telemetry.dir);
 
-    return (std::abs(diff_angle) / ctx.cfg.angularspeed);
+    return (std::abs(diff_angle) / ctx.config.angularSpeed);
 }
 
 bool StateTurning::isFinished() const {

@@ -1,5 +1,6 @@
 #pragma once 
 
+#include <string>
 #include <vector>
 #include "../interfaces/IBallisticSolver.hpp"
 
@@ -45,7 +46,7 @@ class TableSolver : public IBallisticSolver {
     BallisticResult csolve(
         float atitude, 
         float speed,
-        const AmmoParams& ammo) const override;
+        const dlink::AmmoCfg& ammo) const ;
 
         
 };
