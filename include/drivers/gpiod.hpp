@@ -1,13 +1,12 @@
 #pragma once
 
-struct gpiod_chip;
-struct gpiod_line;
+struct gpiod_line_request;
 
-class GpioManager{
+class GpioManager {
     private:
-    gpiod_chip* chip_;
-    gpiod_line* line_start_;
-    gpiod_line* line_drop_;
+    gpiod_line_request* request_ = nullptr;
+    unsigned int startLine_;
+    unsigned int dropLine_;
 
     public:
     GpioManager(const char* chipName, int startLine, int dropLine);

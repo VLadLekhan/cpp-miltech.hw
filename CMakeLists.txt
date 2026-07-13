@@ -13,6 +13,7 @@ set(SOURCES
     src/solvers/TableSolver.cpp
     src/config/FileConfigLoader.cpp
     src/config/ComponentFactory.cpp
+    src/providers/TargetsProvider.cpp
     src/states/StateStopped.cpp
     src/states/StateAccelerating.cpp
     src/states/StateDeclareting.cpp
